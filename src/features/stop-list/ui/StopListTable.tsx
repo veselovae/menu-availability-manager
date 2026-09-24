@@ -2,26 +2,26 @@ import {
   SHOP_LABELS,
   STOP_REASON_LABELS,
 } from "@/features/stop-list/model/constants";
+import { formatDateTime } from "@/shared/lib/date";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { MenuItemStatusKind, type MenuItem } from "@/types/menu";
 
 interface StopListTableProps {
   items: MenuItem[];
+  onOpenStopPanel: (itemId: string) => void;
+  onResume: (itemId: string) => void;
 }
 
 function formatUntil(until: string | null): string {
-  if (until === null) {
-    return "До конца смены";
-  }
-
-  return new Intl.DateTimeFormat("ru-RU", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(until));
+  return until === null ? "До конца смены" : formatDateTime(until);
 }
 
-export function StopListTable({ items }: StopListTableProps) {
+export function StopListTable({
+  items,
+  onOpenStopPanel,
+  onResume,
+}: StopListTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
       <table className="w-full min-w-[1040px] border-collapse text-left">
@@ -76,21 +76,35 @@ export function StopListTable({ items }: StopListTableProps) {
                 <TableCell className="text-sm">
                   {item.status.kind === MenuItemStatusKind.Stopped
                     ? formatUntil(item.status.until)
-                    : "—"}
+                    : "-"}
                 </TableCell>
 
                 <TableCell>
                   <div className="flex justify-end gap-2">
                     {isStopped ? (
                       <>
-                        <Button variant="ghost">Изменить</Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => onOpenStopPanel(item.id)}
+                        >
+                          Изменить
+                        </Button>
 
-                        <Button variant="secondary" disabled={item.stock === 0}>
+                        <Button
+                          variant="secondary"
+                          disabled={item.stock === 0}
+                          onClick={() => onResume(item.id)}
+                        >
                           Вернуть в продажу
                         </Button>
                       </>
                     ) : (
-                      <Button variant="secondary">В стоп-лист</Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onOpenStopPanel(item.id)}
+                      >
+                        В стоп-лист
+                      </Button>
                     )}
                   </div>
                 </TableCell>
