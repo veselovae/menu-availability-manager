@@ -2,7 +2,6 @@
 
 import { useStopListUiStore } from "@/features/stop-list/model/stop-list-ui.store";
 import { StopListTable } from "./StopListTable";
-import { type MenuFilters } from "@/types/menu";
 import { Filters } from "./Filters";
 import { StopReasonPanel } from "./StopReasonPanel";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +9,9 @@ import { menuQueries } from "@/features/stop-list/model/queries";
 import { StopListEmpty } from "./StopListEmpty";
 import { StopListError } from "./StopListError";
 import { StopListLoading } from "./StopListLoading";
+import { useStopItem } from "@/features/stop-list/model/use-stop-item";
+import { useResumeItem } from "@/features/stop-list/model/use-resume-item";
+import type { MenuFilters, StopItemPayload } from "@/types/menu";
 
 interface StopListPageProps {
   filters: MenuFilters;
@@ -17,12 +19,27 @@ interface StopListPageProps {
 
 export function StopListPage({ filters }: StopListPageProps) {
   const menuQuery = useQuery(menuQueries.list(filters));
+  const stopMutation = useStopItem(filters);
+  const resumeMutation = useResumeItem(filters);
+
   const items = menuQuery.data ?? [];
 
   const { selectedItemId, isPanelOpen, openPanel, closePanel } =
     useStopListUiStore();
 
   const selectedItem = items.find((item) => item.id === selectedItemId) ?? null;
+
+  const handleStop = (payload: StopItemPayload) => {
+    if (!selectedItemId) return;
+
+    stopMutation.mutate({ id: selectedItemId, payload });
+
+    closePanel();
+  };
+
+  const handleResume = (itemId: string) => {
+    resumeMutation.mutate(itemId);
+  };
 
   return (
     <>
@@ -53,7 +70,7 @@ export function StopListPage({ filters }: StopListPageProps) {
             <StopListTable
               items={items}
               onOpenStopPanel={openPanel}
-              onResume={() => {}}
+              onResume={handleResume}
             />
           )}
         </section>
@@ -63,7 +80,7 @@ export function StopListPage({ filters }: StopListPageProps) {
         <StopReasonPanel
           item={selectedItem}
           onClose={closePanel}
-          onSubmit={() => {}}
+          onSubmit={handleStop}
         />
       ) : null}
     </>

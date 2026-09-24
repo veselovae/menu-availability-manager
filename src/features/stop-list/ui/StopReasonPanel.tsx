@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
-import { stopItemSchema } from "@/shared/validation/menu";
+import { stopItemFormSchema } from "@/shared/validation/menu";
 import { STOP_REASON_LABELS } from "@/features/stop-list/model/constants";
 import { getStopTimeOptions } from "@/features/stop-list/model/stop-time";
 import { Button } from "@/shared/ui/Button";
@@ -17,7 +17,7 @@ import {
 } from "@/types/menu";
 import { formatDateTime } from "@/shared/lib/date";
 
-type StopFormValues = z.infer<typeof stopItemSchema>;
+type StopFormValues = z.infer<typeof stopItemFormSchema>;
 
 interface StopReasonPanelProps {
   item: MenuItem;
@@ -73,7 +73,7 @@ export function StopReasonPanel({
     control,
     formState: { errors },
   } = useForm<StopFormValues>({
-    resolver: zodResolver(stopItemSchema),
+    resolver: zodResolver(stopItemFormSchema),
     mode: "onBlur",
     defaultValues: getDefaultValues(item),
   });
