@@ -1,68 +1,28 @@
 "use client";
 
-import { useState } from "react";
 import { useStopListUiStore } from "@/features/stop-list/model/stop-list-ui.store";
 import { StopListTable } from "./StopListTable";
-import {
-  MenuItemStatusKind,
-  type MenuFilters,
-  type MenuItem,
-  type StopItemPayload,
-} from "@/types/menu";
+import { type MenuFilters } from "@/types/menu";
 import { Filters } from "./Filters";
 import { StopReasonPanel } from "./StopReasonPanel";
+import { useQuery } from "@tanstack/react-query";
+import { menuQueries } from "@/features/stop-list/model/queries";
+import { StopListEmpty } from "./StopListEmpty";
+import { StopListError } from "./StopListError";
+import { StopListLoading } from "./StopListLoading";
 
 interface StopListPageProps {
-  items: MenuItem[];
   filters: MenuFilters;
 }
 
-export function StopListPage({ items, filters }: StopListPageProps) {
-  const [localItems, setLocalItems] = useState(items);
+export function StopListPage({ filters }: StopListPageProps) {
+  const menuQuery = useQuery(menuQueries.list(filters));
+  const items = menuQuery.data ?? [];
 
   const { selectedItemId, isPanelOpen, openPanel, closePanel } =
     useStopListUiStore();
 
-  const selectedItem =
-    localItems.find((item) => item.id === selectedItemId) ?? null;
-
-  const handleStop = (payload: StopItemPayload) => {
-    if (!selectedItemId) {
-      return;
-    }
-
-    setLocalItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === selectedItemId
-          ? {
-              ...item,
-              status: {
-                kind: MenuItemStatusKind.Stopped,
-                reason: payload.reason,
-                until: payload.until,
-              },
-            }
-          : item,
-      ),
-    );
-
-    closePanel();
-  };
-
-  const handleResume = (itemId: string) => {
-    setLocalItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              status: {
-                kind: MenuItemStatusKind.Available,
-              },
-            }
-          : item,
-      ),
-    );
-  };
+  const selectedItem = items.find((item) => item.id === selectedItemId) ?? null;
 
   return (
     <>
@@ -77,11 +37,25 @@ export function StopListPage({ items, filters }: StopListPageProps) {
         </section>
 
         <section className="mt-8 ">
-          <StopListTable
-            items={localItems}
-            onOpenStopPanel={openPanel}
-            onResume={handleResume}
-          />
+          {menuQuery.isPending && <StopListLoading />}
+
+          {menuQuery.isError && (
+            <StopListError
+              onRetry={() => {
+                void menuQuery.refetch();
+              }}
+            />
+          )}
+
+          {menuQuery.isSuccess && items.length === 0 && <StopListEmpty />}
+
+          {menuQuery.isSuccess && items.length > 0 && (
+            <StopListTable
+              items={items}
+              onOpenStopPanel={openPanel}
+              onResume={() => {}}
+            />
+          )}
         </section>
       </main>
 
@@ -89,7 +63,7 @@ export function StopListPage({ items, filters }: StopListPageProps) {
         <StopReasonPanel
           item={selectedItem}
           onClose={closePanel}
-          onSubmit={handleStop}
+          onSubmit={() => {}}
         />
       ) : null}
     </>

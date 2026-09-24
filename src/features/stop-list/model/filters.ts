@@ -1,14 +1,9 @@
-import { MenuFilters, MenuItem, MenuItemStatusKind, Shop } from "@/types/menu";
+import { MENU_ITEM_STATUSES, SHOPS } from "@/shared/constants/menu";
+import { MenuFilters, MenuItem } from "@/types/menu";
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
 
-const shops = Object.values(Shop);
-const statuses = Object.values(MenuItemStatusKind);
-
-/*
-защита от ручного изменения url и добавления нескольких значений
-на один фильтр - берем только первое
-*/
+// Если параметр повторяется в URL, используем только первое значение
 function getSingleValue(
   value: string | string[] | undefined,
 ): string | undefined {
@@ -21,8 +16,8 @@ export function parseMenuFilters(searchParams: RawSearchParams): MenuFilters {
   const statusValue = getSingleValue(searchParams.status);
 
   return {
-    shop: shops.find((shop) => shop === shopValue) ?? null,
-    status: statuses.find((status) => status === statusValue) ?? null,
+    shop: SHOPS.find((shop) => shop === shopValue) ?? null,
+    status: MENU_ITEM_STATUSES.find((status) => status === statusValue) ?? null,
   };
 }
 
@@ -41,7 +36,7 @@ export function filterMenuItems(
   });
 }
 
-// Формируем query-параметры для выбранных фильтров
+// Формируем URL страницы с выбранными фильтрами в query-параметрах
 export function buildMenuUrl(filters: MenuFilters): string {
   const searchParams = new URLSearchParams();
 
