@@ -1,3 +1,4 @@
+// Содержит начальные позиции меню для заполнения хранилища.
 import {
   MenuItemStatusKind,
   Shop,
@@ -8,7 +9,7 @@ import {
 const INITIAL_UPDATED_AT = "2026-09-24T08:00:00.000Z";
 
 export const menuItemsMock: MenuItem[] = [
-  // KITCHEN SECTION
+  // Позиции кухни.
   {
     id: "item-1",
     title: "Паста карбонара",
@@ -58,7 +59,7 @@ export const menuItemsMock: MenuItem[] = [
     updatedAt: INITIAL_UPDATED_AT,
   },
 
-  // BAR SECTION
+  // Позиции бара.
   {
     id: "item-6",
     title: "Лимонад маракуйя",
@@ -108,7 +109,7 @@ export const menuItemsMock: MenuItem[] = [
     updatedAt: INITIAL_UPDATED_AT,
   },
 
-  // PASTRY SECTION
+  // Позиции кондитерской.
   {
     id: "item-11",
     title: "Чизкейк Сан-Себастьян",

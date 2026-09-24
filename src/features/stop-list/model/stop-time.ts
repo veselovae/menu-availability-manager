@@ -1,3 +1,4 @@
+// Формирует доступное время стопа с шагом 15 минут на ближайшие сутки.
 const STEP_MS = 15 * 60 * 1000; // 15 мин
 const MAX_DURATION_MS = 24 * 60 * 60 * 1000; // 24 часа
 
@@ -6,7 +7,7 @@ const timeFormatter = new Intl.DateTimeFormat("ru-RU", {
   minute: "2-digit",
 });
 
-// Функция для составления опций для выбора времени стопа
+// Функция для составления опций для выбора времени стопа.
 export const getStopTimeOptions = (now = new Date()) => {
   const options: { value: string; label: string }[] = [];
 

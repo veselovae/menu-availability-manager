@@ -1,3 +1,4 @@
+// Возвращает позицию в продажу через моковый API с проверкой остатка.
 import { NextResponse } from "next/server";
 
 import { delay } from "@/shared/lib/delay";
@@ -21,7 +22,7 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 
-  // Проверяем остаток на сервере: запрос может прийти в обход интерфейса
+  // Проверяем остаток на сервере: запрос может прийти в обход интерфейса.
   if (item.stock === 0) {
     return NextResponse.json(
       {
@@ -34,10 +35,10 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 
-  //   Создаем искусственную задержку
+  // Создаем искусственную задержку.
   await delay(600);
 
-  // С вероятностью 20% возвращаем ответ с ошибкой сервера
+  // С вероятностью 20% возвращаем ответ с ошибкой сервера.
   if (Math.random() < 0.2) {
     return NextResponse.json(
       {

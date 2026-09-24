@@ -1,3 +1,4 @@
+// Хранит состояние панели и уведомлений отдельно от серверных данных.
 import { create } from "zustand";
 
 interface StopListUiState {

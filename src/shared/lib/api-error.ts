@@ -1,3 +1,4 @@
+// Извлекает сообщение из ответа API и подставляет запасной текст ошибки.
 import { z } from "zod";
 
 const apiErrorResponseSchema = z.object({

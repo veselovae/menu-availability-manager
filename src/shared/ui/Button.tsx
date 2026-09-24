@@ -1,3 +1,4 @@
+// Задает общие стили кнопок и состояние отправки с индикатором.
 import type { ButtonHTMLAttributes } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

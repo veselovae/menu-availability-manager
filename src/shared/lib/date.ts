@@ -1,3 +1,4 @@
+// Форматирует дату и время единообразно для русскоязычного интерфейса.
 const dateTimeFormatter = new Intl.DateTimeFormat("ru-RU", {
   day: "2-digit",
   month: "2-digit",

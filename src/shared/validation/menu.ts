@@ -1,3 +1,4 @@
+// Определяет общие правила проверки стопа для API и клиентской формы.
 import { z } from "zod";
 
 import { StopReason } from "@/types/menu";
@@ -13,7 +14,7 @@ const untilSchema = z
 
     const timestamp = Date.parse(value);
 
-    // Проверяем корректна ли дата
+    // Проверяем корректна ли дата.
     if (Number.isNaN(timestamp)) {
       context.addIssue({
         code: "custom",
@@ -23,7 +24,7 @@ const untilSchema = z
       return;
     }
 
-    // Проверяем, что дата строго в будущем
+    // Проверяем, что дата строго в будущем.
     const now = Date.now();
     if (timestamp <= now) {
       context.addIssue({
@@ -34,7 +35,7 @@ const untilSchema = z
       return;
     }
 
-    // Проверяем, что дата не больше чем через 24 часа
+    // Проверяем, что дата не больше чем через 24 часа.
     if (timestamp - now > MAX_AHEAD_MS) {
       context.addIssue({
         code: "custom",
@@ -44,7 +45,7 @@ const untilSchema = z
       return;
     }
 
-    // Проверка шага в 15 мин
+    // Проверка шага в 15 мин.
     if (timestamp % STEP_MS !== 0) {
       context.addIssue({
         code: "custom",
@@ -59,7 +60,6 @@ const untilSchema = z
 2. stopItemFormSchema расширяет её полем untilMode, которое нужно форме,
 но не передаётся на сервер
 */
-
 export const stopItemSchema = z.object({
   reason: z.enum(StopReason),
   until: untilSchema,

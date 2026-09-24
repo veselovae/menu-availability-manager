@@ -1,3 +1,4 @@
+// Сохраняет стоп с оптимистичным обновлением, откатом и синхронизацией кэша.
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,21 +24,21 @@ interface StopItemContext {
 export function useStopItem(filters: MenuFilters) {
   const queryClient = useQueryClient();
 
-  // Получаем доступ к кэшу текущего списка
+  // Получаем доступ к кэшу текущего списка.
   const listKey = menuKeys.list(filters);
 
   return useMutation<MenuItem, Error, StopItemVariables, StopItemContext>({
     mutationFn: ({ id, payload }) => stopMenuItemRequest(id, payload),
 
-    // обновляем интерфейс до отправки запроса (оптимистичное обновление)
+    // Обновляем интерфейс до отправки запроса (оптимистичное обновление).
     onMutate: async ({ id, payload }) => {
-      // Отменяем текущий запрос для предотвращения перезаписи оптимистичного обновления
+      // Отменяем текущий запрос для предотвращения перезаписи оптимистичного обновления.
       await queryClient.cancelQueries({ queryKey: listKey });
 
-      // сохраняем прежний список
+      // Сохраняем прежний список.
       const previousItems = queryClient.getQueryData<MenuItem[]>(listKey);
 
-      // заменяем статус нужной позиции на Stopped
+      // Заменяем статус нужной позиции на Stopped.
       queryClient.setQueryData<MenuItem[]>(listKey, (currentItems = []) =>
         currentItems.map((item) =>
           item.id === id
@@ -52,14 +53,14 @@ export function useStopItem(filters: MenuFilters) {
       return { previousItems };
     },
 
-    // При ошибке запроса в кэш возвращается сохраненный список
+    // При ошибке запроса в кэш возвращается сохраненный список.
     onError: (_error, _variables, context) => {
       if (context?.previousItems) {
         queryClient.setQueryData(listKey, context.previousItems);
       }
     },
 
-    // синхронизируем данные с сервером
+    // Синхронизируем данные с сервером.
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: menuKeys.all });
     },

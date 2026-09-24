@@ -1,3 +1,4 @@
+// Показывает ошибку загрузки и кнопку повторного запроса.
 import { Button } from "@/shared/ui/Button";
 
 interface StopListErrorProps {

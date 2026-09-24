@@ -1,3 +1,4 @@
+// Отображает статус в виде метки с общими стилями.
 type BadgeVariant = "success" | "danger";
 
 interface BadgeProps {

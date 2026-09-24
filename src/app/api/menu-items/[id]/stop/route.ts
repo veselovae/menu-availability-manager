@@ -1,3 +1,4 @@
+// Проверяет данные и сохраняет причину и срок стопа через моковый API.
 import { NextResponse } from "next/server";
 
 import { z } from "zod";
@@ -32,7 +33,7 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  //   Повторная валидация (на стороне сервера)
+  // Повторная валидация (на стороне сервера).
   const result = stopItemSchema.safeParse(body);
 
   if (!result.success) {
@@ -41,7 +42,7 @@ export async function POST(request: Request, context: RouteContext) {
         error: {
           code: "VALIDATION_ERROR",
           message: "Некорректные данные формы",
-          // Преобразует ошибки валидации в объект, сгруппированный по полям
+          // Преобразует ошибки валидации в объект, сгруппированный по полям.
           details: z.flattenError(result.error),
         },
       },
@@ -49,10 +50,10 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
-  //   Создаем искусственную задержку
+  // Создаем искусственную задержку.
   await delay(600);
 
-  // С вероятностью 20% возвращаем ответ с ошибкой сервера
+  // С вероятностью 20% возвращаем ответ с ошибкой сервера.
   if (Math.random() < 0.2) {
     return NextResponse.json(
       {

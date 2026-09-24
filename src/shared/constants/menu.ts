@@ -1,3 +1,4 @@
+// Предоставляет допустимые цеха и статусы для проверки фильтров.
 import { Shop, MenuItemStatusKind } from "@/types/menu";
 
 export const SHOPS: readonly Shop[] = Object.values(Shop);

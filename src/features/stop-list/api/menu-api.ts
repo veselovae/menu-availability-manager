@@ -1,7 +1,8 @@
+// Выполняет HTTP-запросы меню и передает ошибки в слой работы с данными.
 import { parseApiError } from "@/shared/lib/api-error";
 import type { MenuFilters, MenuItem, StopItemPayload } from "@/types/menu";
 
-// Получаем все позиции меню с учетом фильтров
+// Получаем все позиции меню с учетом фильтров.
 export async function fetchMenuItems(
   filters: MenuFilters,
 ): Promise<MenuItem[]> {
@@ -21,7 +22,7 @@ export async function fetchMenuItems(
   return (await response.json()) as MenuItem[];
 }
 
-// Добавляем позиции в стоп по id
+// Добавляем позиции в стоп по id.
 export async function stopMenuItemRequest(
   id: string,
   payload: StopItemPayload,
@@ -39,7 +40,7 @@ export async function stopMenuItemRequest(
   return (await response.json()) as MenuItem;
 }
 
-// Возвращаем позицию в продажу по id
+// Возвращаем позицию в продажу по id.
 export async function resumeMenuItemRequest(id: string): Promise<MenuItem> {
   const response = await fetch(`/api/menu-items/${id}/resume`, {
     method: "POST",

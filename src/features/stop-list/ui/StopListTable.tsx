@@ -1,3 +1,4 @@
+// Отображает позиции, состояние сохранения и действия без обращения к API.
 import {
   SHOP_LABELS,
   STOP_REASON_LABELS,
@@ -67,6 +68,18 @@ export function StopListTable({
                     <Badge variant="danger">В стоп-листе</Badge>
                   ) : (
                     <Badge variant="success">В продаже</Badge>
+                  )}
+                  {isPending && (
+                    <span
+                      role="status"
+                      className="mt-2 flex items-center gap-1.5 whitespace-nowrap text-xs text-neutral-500"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="h-3 w-3 animate-spin rounded-full border-2 border-current border-r-transparent"
+                      />
+                      Сохраняется...
+                    </span>
                   )}
                 </TableCell>
 

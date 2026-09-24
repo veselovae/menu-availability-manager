@@ -1,3 +1,4 @@
+// Показывает фильтры и обновляет URL при выборе цеха или статуса.
 ﻿"use client";
 
 import type { ReactNode } from "react";
@@ -49,10 +50,7 @@ export function Filters({ filters }: FiltersProps) {
   );
 }
 
-/*
-Оставила вспомогательные компоненты в этом файле,
-поскольку они используются только внутри Filters
-*/
+// Вспомогательные компоненты используются только внутри фильтров.
 interface FilterGroupProps<T extends string> {
   name: string;
   label: string;
@@ -117,8 +115,8 @@ const FilterChip = ({
         value={value}
         checked={checked}
         onChange={onChange}
-        // используем эти классы чтоб визуально скрыть input
-        // и менять span в зависимости от состояния input'а
+        // Используем эти классы чтоб визуально скрыть input.
+        // И менять span в зависимости от состояния input'а.
         className="peer sr-only"
       />
       <span

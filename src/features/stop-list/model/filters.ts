@@ -1,16 +1,17 @@
+// Преобразует фильтры между URL и моделью и отбирает подходящие позиции.
 import { MENU_ITEM_STATUSES, SHOPS } from "@/shared/constants/menu";
 import { MenuFilters, MenuItem } from "@/types/menu";
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
 
-// Если параметр повторяется в URL, используем только первое значение
+// Если параметр повторяется в URL, используем только первое значение.
 function getSingleValue(
   value: string | string[] | undefined,
 ): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-// Парсим фильтры из searchParams для ui
+// Парсим фильтры из searchParams для ui.
 export function parseMenuFilters(searchParams: RawSearchParams): MenuFilters {
   const shopValue = getSingleValue(searchParams.shop);
   const statusValue = getSingleValue(searchParams.status);
@@ -21,7 +22,7 @@ export function parseMenuFilters(searchParams: RawSearchParams): MenuFilters {
   };
 }
 
-// Фильтруем данные по выбранным фильтрам
+// Фильтруем данные по выбранным фильтрам.
 export function filterMenuItems(
   items: MenuItem[],
   filters: MenuFilters,
@@ -36,7 +37,7 @@ export function filterMenuItems(
   });
 }
 
-// Формируем URL страницы с выбранными фильтрами в query-параметрах
+// Формируем URL страницы с выбранными фильтрами в query-параметрах.
 export function buildMenuUrl(filters: MenuFilters): string {
   const searchParams = new URLSearchParams();
 

@@ -1,3 +1,4 @@
+// Показывает форму создания и редактирования стопа с проверкой полей.
 "use client";
 
 import { useState, type ComponentProps } from "react";
@@ -37,7 +38,7 @@ const REASON_OPTIONS = Object.entries(STOP_REASON_LABELS).map(
   ([value, label]) => ({ value, label }),
 );
 
-// формирует начальные значения формы
+// Формирует начальные значения формы.
 function getDefaultValues(item: MenuItem): StopFormValues {
   const status = item.status;
   const until =
@@ -53,7 +54,7 @@ function getDefaultValues(item: MenuItem): StopFormValues {
   };
 }
 
-// проверяет наличие времени в списке
+// Проверяет наличие времени в списке.
 function hasOption(options: SelectOption[], value: string | null): boolean {
   return options.some((option) => option.value === value);
 }
@@ -86,14 +87,14 @@ export function StopReasonPanel({
   const handleUntilModeChange = (mode: UntilMode) => {
     setValue("untilMode", mode, { shouldDirty: true });
 
-    // Если выбираем "до конца смены", то очищаем время
+    // Если выбираем "до конца смены", то очищаем время.
     if (mode === "shift") {
       setValue("until", null, { shouldDirty: true, shouldValidate: true });
 
       return;
     }
 
-    // Если выбрали "до конкретного времени", то рассчитываем актуальные опции
+    // Если выбрали "до конкретного времени", то рассчитываем актуальные опции.
     const options = getStopTimeOptions();
 
     setTimeOptions(options);
@@ -114,14 +115,13 @@ export function StopReasonPanel({
 
   return (
     <>
-      {/* бэкгрунд для закрытия через клик мимо панели */}
+      {/* Закрывает панель при нажатии на фон. */}
       <button
         type="button"
         className="fixed inset-0 z-40 bg-black/20"
         onClick={onClose}
       />
 
-      {/* панель */}
       <aside className="fixed bottom-0 right-0 top-0 z-50 flex w-[440px] flex-col border-l border-neutral-200 bg-white shadow-xl">
         <header className="border-b border-neutral-200 p-6">
           <p className="text-sm text-neutral-500">

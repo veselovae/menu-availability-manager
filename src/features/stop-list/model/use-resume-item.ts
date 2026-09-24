@@ -1,3 +1,4 @@
+// Снимает стоп с оптимистичным обновлением, откатом и синхронизацией кэша.
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +15,6 @@ interface ResumeItemContext {
   previousItems: MenuItem[] | undefined;
 }
 
-// Последовательность аналогичная src\features\stop-list\model\use-stop-item.ts
 export function useResumeItem(filters: MenuFilters) {
   const queryClient = useQueryClient();
 

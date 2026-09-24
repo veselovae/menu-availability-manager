@@ -1,3 +1,4 @@
+// Сообщает, что по выбранным фильтрам нет позиций.
 export const StopListEmpty = () => {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-10 text-center">

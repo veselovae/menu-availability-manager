@@ -1,3 +1,4 @@
+// Показывает заглушку списка во время загрузки.
 export const StopListLoading = () => {
   return (
     <div className="space-y-3 rounded-xl border border-neutral-200 bg-white px-4 py-2">

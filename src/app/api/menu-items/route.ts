@@ -1,3 +1,5 @@
+// Возвращает позиции меню с фильтрацией и задержкой для имитации API.
+
 import { NextResponse } from "next/server";
 
 import { delay } from "@/shared/lib/delay";
@@ -28,7 +30,7 @@ export async function GET(request: Request) {
     );
   }
 
-  //   Создаем искусственную задержку
+  // Создаем искусственную задержку
   await delay(500);
 
   const items = getMenuItems().filter((item) => {

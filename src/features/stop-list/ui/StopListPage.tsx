@@ -1,3 +1,4 @@
+// Связывает запросы, мутации и состояние интерфейса на экране стоп-листа.
 "use client";
 
 import { useStopListUiStore } from "@/features/stop-list/model/stop-list-ui.store";

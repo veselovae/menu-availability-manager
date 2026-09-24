@@ -1,3 +1,4 @@
+// Содержит подписи цехов и причин стопа для отображения в интерфейсе.
 import { Shop, StopReason } from "@/types/menu";
 
 export const SHOP_LABELS: Record<Shop, string> = {
