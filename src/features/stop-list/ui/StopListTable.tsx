@@ -93,14 +93,21 @@ export function StopListTable({
                         >
                           Изменить
                         </Button>
-
-                        <Button
-                          variant="secondary"
-                          disabled={item.stock === 0 || isPending}
-                          onClick={() => onResume(item.id)}
+                        <span
+                          title={
+                            item.stock === 0
+                              ? "Нельзя вернуть позицию в продажу при остатке 0"
+                              : undefined
+                          }
                         >
-                          Вернуть в продажу
-                        </Button>
+                          <Button
+                            variant="secondary"
+                            disabled={item.stock === 0 || isPending}
+                            onClick={() => onResume(item.id)}
+                          >
+                            Вернуть в продажу
+                          </Button>
+                        </span>
                       </>
                     ) : (
                       <Button
