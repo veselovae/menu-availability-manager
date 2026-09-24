@@ -1,15 +1,31 @@
-export type Shop = "kitchen" | "bar" | "pastry";
+/*
+Вместо строковых объединений из ТЗ, решила использовать enum
+как единый источник истины: изменение значения в одном месте 
+не потребует правок во всех местах его использования
+*/
 
-export type StopReason =
-  | "out_of_stock" // закончились продукты
-  | "equipment" // сломалось оборудование
-  | "quality" // вопросы к качеству партии
-  | "menu_change"; // позиция выведена из меню смены
+export enum Shop {
+  Kitchen = "kitchen",
+  Bar = "bar",
+  Pastry = "pastry",
+}
+
+export enum StopReason {
+  OutOfStock = "out_of_stock", // закончились продукты
+  Equipment = "equipment", // сломалось оборудование
+  Quality = "quality", // вопросы к качеству партии
+  MenuChange = "menu_change", // позиция выведена из меню смены
+}
+
+export enum MenuItemStatusKind {
+  Available = "available",
+  Stopped = "stopped",
+}
 
 export type MenuItemStatus =
-  | { kind: "available" }
+  | { kind: MenuItemStatusKind.Available }
   | {
-      kind: "stopped";
+      kind: MenuItemStatusKind.Stopped;
       reason: StopReason;
       until: string | null; // ISO-время или null = до конца смены
     };
