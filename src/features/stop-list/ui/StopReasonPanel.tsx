@@ -21,6 +21,7 @@ type StopFormValues = z.infer<typeof stopItemFormSchema>;
 
 interface StopReasonPanelProps {
   item: MenuItem;
+  isSubmitting: boolean;
   onClose: () => void;
   onSubmit: (payload: StopItemPayload) => void;
 }
@@ -59,6 +60,7 @@ function hasOption(options: SelectOption[], value: string | null): boolean {
 
 export function StopReasonPanel({
   item,
+  isSubmitting,
   onClose,
   onSubmit,
 }: StopReasonPanelProps) {
@@ -106,7 +108,7 @@ export function StopReasonPanel({
   const submitForm = (values: StopFormValues) => {
     onSubmit({
       reason: values.reason,
-      until: values.untilMode === "shift" ? null : values.until,
+      until: values.until,
     });
   };
 
@@ -209,7 +211,7 @@ export function StopReasonPanel({
         </form>
 
         <footer className="flex justify-end gap-3 border-t border-neutral-200 p-6">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Отмена
           </Button>
 
@@ -217,8 +219,13 @@ export function StopReasonPanel({
             type="submit"
             form="stop-item-form"
             disabled={Object.keys(errors).length > 0}
+            loading={isSubmitting}
           >
-            {isEditing ? "Сохранить" : "Поставить в стоп"}
+            {isSubmitting
+              ? "Сохраняется..."
+              : item.status.kind === "stopped"
+                ? "Сохранить"
+                : "Поставить в стоп"}
           </Button>
         </footer>
       </aside>

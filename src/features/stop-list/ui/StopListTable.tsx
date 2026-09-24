@@ -9,6 +9,7 @@ import { MenuItemStatusKind, type MenuItem } from "@/types/menu";
 
 interface StopListTableProps {
   items: MenuItem[];
+  pendingItemId: string | null;
   onOpenStopPanel: (itemId: string) => void;
   onResume: (itemId: string) => void;
 }
@@ -19,6 +20,7 @@ function formatUntil(until: string | null): string {
 
 export function StopListTable({
   items,
+  pendingItemId,
   onOpenStopPanel,
   onResume,
 }: StopListTableProps) {
@@ -40,6 +42,7 @@ export function StopListTable({
         <tbody>
           {items.map((item) => {
             const isStopped = item.status.kind === MenuItemStatusKind.Stopped;
+            const isPending = pendingItemId === item.id;
 
             const rowClassName = [
               "border-b border-neutral-100 last:border-b-0",
@@ -86,13 +89,14 @@ export function StopListTable({
                         <Button
                           variant="ghost"
                           onClick={() => onOpenStopPanel(item.id)}
+                          disabled={isPending}
                         >
                           Изменить
                         </Button>
 
                         <Button
                           variant="secondary"
-                          disabled={item.stock === 0}
+                          disabled={item.stock === 0 || isPending}
                           onClick={() => onResume(item.id)}
                         >
                           Вернуть в продажу
@@ -102,6 +106,7 @@ export function StopListTable({
                       <Button
                         variant="secondary"
                         onClick={() => onOpenStopPanel(item.id)}
+                        disabled={isPending}
                       >
                         В стоп-лист
                       </Button>

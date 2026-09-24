@@ -12,6 +12,7 @@ import { StopListLoading } from "./StopListLoading";
 import { useStopItem } from "@/features/stop-list/model/use-stop-item";
 import { useResumeItem } from "@/features/stop-list/model/use-resume-item";
 import type { MenuFilters, StopItemPayload } from "@/types/menu";
+import { Toast } from "@/shared/ui/Toast";
 
 interface StopListPageProps {
   filters: MenuFilters;
@@ -24,22 +25,53 @@ export function StopListPage({ filters }: StopListPageProps) {
 
   const items = menuQuery.data ?? [];
 
-  const { selectedItemId, isPanelOpen, openPanel, closePanel } =
-    useStopListUiStore();
+  const {
+    selectedItemId,
+    isPanelOpen,
+    toastMessage,
+    toastVariant,
+    toastId,
+    openPanel,
+    closePanel,
+    showToast,
+    hideToast,
+  } = useStopListUiStore();
 
   const selectedItem = items.find((item) => item.id === selectedItemId) ?? null;
 
-  const handleStop = (payload: StopItemPayload) => {
+  const handleStop = async (payload: StopItemPayload) => {
     if (!selectedItemId) return;
 
-    stopMutation.mutate({ id: selectedItemId, payload });
+    try {
+      await stopMutation.mutateAsync({ id: selectedItemId, payload });
 
-    closePanel();
+      closePanel();
+      showToast("Причина и срок стопа сохранены", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Не удалось сохранить изменения",
+      );
+    }
   };
 
   const handleResume = (itemId: string) => {
-    resumeMutation.mutate(itemId);
+    resumeMutation.mutate(itemId, {
+      onSuccess: () => {
+        showToast("Позиция возвращена в продажу", "success");
+      },
+      onError: (error) => {
+        showToast(error.message);
+      },
+    });
   };
+
+  const pendingItemId = stopMutation.isPending
+    ? stopMutation.variables.id
+    : resumeMutation.isPending
+      ? resumeMutation.variables
+      : null;
 
   return (
     <>
@@ -69,6 +101,7 @@ export function StopListPage({ filters }: StopListPageProps) {
           {menuQuery.isSuccess && items.length > 0 && (
             <StopListTable
               items={items}
+              pendingItemId={pendingItemId}
               onOpenStopPanel={openPanel}
               onResume={handleResume}
             />
@@ -79,8 +112,18 @@ export function StopListPage({ filters }: StopListPageProps) {
       {isPanelOpen && selectedItem ? (
         <StopReasonPanel
           item={selectedItem}
+          isSubmitting={stopMutation.isPending}
           onClose={closePanel}
           onSubmit={handleStop}
+        />
+      ) : null}
+
+      {toastMessage ? (
+        <Toast
+          key={toastId}
+          message={toastMessage}
+          variant={toastVariant}
+          onClose={hideToast}
         />
       ) : null}
     </>
