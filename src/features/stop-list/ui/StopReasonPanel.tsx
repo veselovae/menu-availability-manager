@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useWatch } from "react-hook-form";
+import type { z } from "zod";
 
+import { stopItemSchema } from "@/shared/validation/menu";
 import { STOP_REASON_LABELS } from "@/features/stop-list/model/constants";
 import { getStopTimeOptions } from "@/features/stop-list/model/stop-time";
 import { Button } from "@/shared/ui/Button";
@@ -13,80 +17,97 @@ import {
 } from "@/types/menu";
 import { formatDateTime } from "@/shared/lib/date";
 
+type StopFormValues = z.infer<typeof stopItemSchema>;
+
 interface StopReasonPanelProps {
   item: MenuItem;
   onClose: () => void;
   onSubmit: (payload: StopItemPayload) => void;
 }
 
-type UntilMode = "shift" | "time";
+type UntilMode = StopFormValues["untilMode"];
 
 const UNTIL_MODE_OPTIONS: { value: UntilMode; label: string }[] = [
   { value: "shift", label: "До конца смены" },
   { value: "time", label: "До конкретного времени" },
 ];
 
+const REASON_OPTIONS = Object.entries(STOP_REASON_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
+
+// формирует начальные значения формы
+function getDefaultValues(item: MenuItem): StopFormValues {
+  const status = item.status;
+  const until =
+    status.kind === MenuItemStatusKind.Stopped ? status.until : null;
+
+  return {
+    reason:
+      status.kind === MenuItemStatusKind.Stopped
+        ? status.reason
+        : StopReason.OutOfStock,
+    until,
+    untilMode: until === null ? "shift" : "time",
+  };
+}
+
+// проверяет наличие времени в списке
+function hasOption(options: SelectOption[], value: string | null): boolean {
+  return options.some((option) => option.value === value);
+}
+
 export function StopReasonPanel({
   item,
   onClose,
   onSubmit,
 }: StopReasonPanelProps) {
-  // Стейт причины стопа
-  const [reason, setReason] = useState<StopReason>(
-    item.status.kind === MenuItemStatusKind.Stopped
-      ? item.status.reason
-      : StopReason.OutOfStock,
-  );
-
-  // Стейт режима стопаЖ до конца смены или до конкретного времени
-  const [untilMode, setUntilMode] = useState<"shift" | "time">(
-    item.status.kind === MenuItemStatusKind.Stopped && item.status.until
-      ? "time"
-      : "shift",
-  );
-
-  // Стейт конкретного времени
-  const [until, setUntil] = useState(
-    item.status.kind === MenuItemStatusKind.Stopped && item.status.until
-      ? item.status.until
-      : "",
-  );
+  const isEditing = item.status.kind === MenuItemStatusKind.Stopped;
 
   const [timeOptions, setTimeOptions] = useState(() => getStopTimeOptions());
-  const [timeError, setTimeError] = useState<string | null>(null);
 
-  const selectedUntil = until;
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    formState: { errors },
+  } = useForm<StopFormValues>({
+    resolver: zodResolver(stopItemSchema),
+    mode: "onBlur",
+    defaultValues: getDefaultValues(item),
+  });
 
-  const handleSubmit = () => {
-    if (untilMode === "time") {
-      const timestamp = new Date(selectedUntil).getTime();
-      const now = Date.now();
+  const untilMode = useWatch({ name: "untilMode", control });
+  const until = useWatch({ name: "until", control });
 
-      if (
-        !Number.isFinite(timestamp) ||
-        timestamp <= now ||
-        timestamp > now + 24 * 60 * 60 * 1000
-      ) {
-        setTimeOptions(getStopTimeOptions());
-        setUntil("");
-        setTimeError("Выберите время в будущем в пределах ближайших 24 часов.");
-        return;
-      }
+  const handleUntilModeChange = (mode: UntilMode) => {
+    setValue("untilMode", mode, { shouldDirty: true });
+
+    // Если выбираем "до конца смены", то очищаем время
+    if (mode === "shift") {
+      setValue("until", null, { shouldDirty: true, shouldValidate: true });
+
+      return;
     }
 
-    onSubmit({
-      reason,
-      until: untilMode === "shift" ? null : selectedUntil,
+    // Если выбрали "до конкретного времени", то рассчитываем актуальные опции
+    const options = getStopTimeOptions();
+
+    setTimeOptions(options);
+
+    if (hasOption(options, until)) return;
+
+    setValue("until", null, {
+      shouldDirty: true,
     });
   };
 
-  const handleUntilModeChange = (mode: UntilMode) => {
-    if (mode === "time") {
-      setTimeOptions(getStopTimeOptions());
-    }
-
-    setUntilMode(mode);
-    setTimeError(null);
+  const submitForm = (values: StopFormValues) => {
+    onSubmit({
+      reason: values.reason,
+      until: values.untilMode === "shift" ? null : values.until,
+    });
   };
 
   return (
@@ -102,104 +123,147 @@ export function StopReasonPanel({
       <aside className="fixed bottom-0 right-0 top-0 z-50 flex w-[440px] flex-col border-l border-neutral-200 bg-white shadow-xl">
         <header className="border-b border-neutral-200 p-6">
           <p className="text-sm text-neutral-500">
-            {item.status.kind === MenuItemStatusKind.Stopped
-              ? "Редактирование стопа"
-              : "Постановка в стоп-лист"}
+            {isEditing ? "Редактирование стопа" : "Постановка в стоп-лист"}
           </p>
 
           <h2 className="mt-1 text-xl font-semibold">{item.title}</h2>
         </header>
 
-        <div className="flex-1 space-y-6 p-6">
+        <form
+          id="stop-item-form"
+          className="flex flex-1 flex-col space-y-6 p-6"
+          onSubmit={handleSubmit(submitForm)}
+        >
           <label className="block">
             <span className="text-sm font-medium">Причина</span>
 
-            <select
-              value={reason}
-              className="mt-2 h-11 w-full rounded-lg border border-neutral-300 bg-white px-3"
-              onChange={(event) => {
-                setReason(event.target.value as StopReason);
-              }}
-            >
-              {Object.entries(STOP_REASON_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+            <FormSelect
+              {...register("reason")}
+              options={REASON_OPTIONS}
+              error={errors.reason?.message}
+              className="mt-2 h-11"
+              errorClassName="mt-1"
+            />
           </label>
 
           <fieldset>
             <legend className="text-sm font-medium">Срок стопа</legend>
 
-            {UNTIL_MODE_OPTIONS.map(({ value, label }) => (
-              <label key={value} className="mt-3 flex items-center gap-3">
-                <input
-                  type="radio"
-                  name="until-mode"
-                  value={value}
-                  checked={untilMode === value}
-                  onChange={() => handleUntilModeChange(value)}
-                />
+            <div className="mt-3 space-y-3">
+              {UNTIL_MODE_OPTIONS.map(({ value, label }) => (
+                <label
+                  key={value}
+                  className="flex cursor-pointer items-center gap-3"
+                >
+                  <input
+                    type="radio"
+                    {...register("untilMode")}
+                    value={value}
+                    checked={untilMode === value}
+                    onChange={() => {
+                      handleUntilModeChange(value);
+                    }}
+                  />
 
-                <span>{label}</span>
-              </label>
-            ))}
+                  <span className="text-sm">{label}</span>
+                </label>
+              ))}
+            </div>
 
             {untilMode === "time" ? (
-              <>
-                <select
-                  value={selectedUntil}
-                  className="mt-3 h-10 w-full rounded-lg border border-neutral-300 bg-white px-3"
-                  onFocus={() => setTimeOptions(getStopTimeOptions())}
+              <div className="mt-3">
+                <FormSelect
+                  {...register("until", {
+                    setValueAs: (value: string | null) => value || null,
+                  })}
+                  value={until ?? ""}
+                  options={timeOptions}
+                  error={errors.until?.message}
+                  className="h-10 text-sm"
+                  errorClassName="mt-2"
+                  onFocus={() => {
+                    setTimeOptions(getStopTimeOptions());
+                  }}
                   onChange={(event) => {
-                    setUntil(event.target.value);
-                    setTimeError(null);
+                    const value = event.target.value;
+
+                    setValue("until", value || null, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
                   }}
                 >
                   <option value="" disabled>
                     Выберите время
                   </option>
 
-                  {selectedUntil &&
-                  !timeOptions.some(
-                    (option) => option.value === selectedUntil,
-                  ) ? (
-                    // Отображаем этот вариант, если переданного
-                    // значения нет среди опций селекта
-                    <option value={selectedUntil}>
-                      {formatDateTime(selectedUntil)} (выбрано)
+                  {until && !hasOption(timeOptions, until) ? (
+                    <option value={until}>
+                      {formatDateTime(until)} (выбрано)
                     </option>
                   ) : null}
-
-                  {/* Опции с учетом шага 15 мин */}
-                  {timeOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-
-                {timeError ? (
-                  <p className="mt-2 text-sm text-red-600">{timeError}</p>
-                ) : null}
-              </>
+                </FormSelect>
+              </div>
             ) : null}
           </fieldset>
-        </div>
+        </form>
 
         <footer className="flex justify-end gap-3 border-t border-neutral-200 p-6">
           <Button variant="secondary" onClick={onClose}>
             Отмена
           </Button>
 
-          <Button onClick={handleSubmit}>
-            {item.status.kind === MenuItemStatusKind.Stopped
-              ? "Сохранить"
-              : "Поставить в стоп"}
+          <Button
+            type="submit"
+            form="stop-item-form"
+            disabled={Object.keys(errors).length > 0}
+          >
+            {isEditing ? "Сохранить" : "Поставить в стоп"}
           </Button>
         </footer>
       </aside>
+    </>
+  );
+}
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface FormSelectProps extends ComponentProps<"select"> {
+  options: SelectOption[];
+  error?: string;
+  errorClassName?: string;
+}
+
+function FormSelect({
+  options,
+  error,
+  className = "",
+  errorClassName = "",
+  children,
+  ...props
+}: FormSelectProps) {
+  const selectClassName = [
+    "w-full rounded-lg border bg-white px-3 outline-none",
+    error ? "border-red-500" : "border-neutral-300 focus:border-neutral-500",
+    className,
+  ].join(" ");
+
+  return (
+    <>
+      <select {...props} className={selectClassName}>
+        {children}
+        {options.map(({ value, label }) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+      {error ? (
+        <p className={`text-sm text-red-600 ${errorClassName}`}>{error}</p>
+      ) : null}
     </>
   );
 }
