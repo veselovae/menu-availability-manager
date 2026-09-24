@@ -43,3 +43,8 @@ export interface StopItemPayload {
   reason: StopReason;
   until: string | null;
 }
+
+export interface MenuFilters {
+  shop: Shop | null;
+  status: MenuItemStatusKind | null;
+}

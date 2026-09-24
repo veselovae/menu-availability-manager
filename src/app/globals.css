@@ -5,6 +5,10 @@
   --foreground: #171512;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 * {
   box-sizing: border-box;
 }
