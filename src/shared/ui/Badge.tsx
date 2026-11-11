@@ -7,15 +7,12 @@ interface BadgeProps {
 }
 
 const VARIANTS_STYLES: Record<BadgeVariant, string> = {
-  success: "bg-emerald-50 text-emerald-700",
-  danger: "bg-red-50 text-red-700",
+  success: "badge-available",
+  danger: "badge-stopped",
 };
 
 export function Badge({ children, variant = "success" }: BadgeProps) {
-  const finalClassName = [
-    "inline-flex rounded-full px-2.5 py-1 text-xs font-medium",
-    VARIANTS_STYLES[variant],
-  ].join(" ");
+  const finalClassName = ["status-badge", VARIANTS_STYLES[variant]].join(" ");
 
   return <span className={finalClassName}>{children}</span>;
 }

@@ -1,7 +1,8 @@
 // Показывает форму создания и редактирования стопа с проверкой полей.
 "use client";
 
-import { useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { Icon } from "@/shared/ui/Icon";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
@@ -23,6 +24,7 @@ type StopFormValues = z.infer<typeof stopItemFormSchema>;
 interface StopReasonPanelProps {
   item: MenuItem;
   isSubmitting: boolean;
+  errorMessage?: string;
   onClose: () => void;
   onSubmit: (payload: StopItemPayload) => void;
 }
@@ -62,10 +64,23 @@ function hasOption(options: SelectOption[], value: string | null): boolean {
 export function StopReasonPanel({
   item,
   isSubmitting,
+  errorMessage,
   onClose,
   onSubmit,
 }: StopReasonPanelProps) {
   const isEditing = item.status.kind === MenuItemStatusKind.Stopped;
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    dialog?.showModal();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const [timeOptions, setTimeOptions] = useState(() => getStopTimeOptions());
 
@@ -114,122 +129,155 @@ export function StopReasonPanel({
   };
 
   return (
-    <>
-      {/* Закрывает панель при нажатии на фон. */}
-      <button
-        type="button"
-        className="fixed inset-0 z-40 bg-black/20"
-        onClick={onClose}
-      />
-
-      <aside className="fixed bottom-0 right-0 top-0 z-50 flex w-[440px] flex-col border-l border-neutral-200 bg-white shadow-xl">
-        <header className="border-b border-neutral-200 p-6">
-          <p className="text-sm text-neutral-500">
-            {isEditing ? "Редактирование стопа" : "Постановка в стоп-лист"}
-          </p>
-
-          <h2 className="mt-1 text-xl font-semibold">{item.title}</h2>
-        </header>
-
-        <form
-          id="stop-item-form"
-          className="flex flex-1 flex-col space-y-6 p-6"
-          onSubmit={handleSubmit(submitForm)}
+    <dialog
+      ref={dialogRef}
+      className="stop-dialog"
+      aria-labelledby="stop-dialog-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!isSubmitting) onClose();
+      }}
+      onClick={(event) => {
+        if (event.target !== event.currentTarget || isSubmitting) return;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        if (
+          event.clientX < bounds.left ||
+          event.clientX > bounds.right ||
+          event.clientY < bounds.top ||
+          event.clientY > bounds.bottom
+        )
+          onClose();
+      }}
+    >
+      <header className="border-b border-neutral-200 p-6">
+        <button
+          type="button"
+          className="app-button button-ghost float-right"
+          aria-label="Закрыть панель"
+          onClick={onClose}
+          disabled={isSubmitting}
         >
-          <label className="block">
-            <span className="text-sm font-medium">Причина</span>
+          <Icon name="close" />
+        </button>
+        <p className="text-sm text-neutral-500">
+          {isEditing ? "Редактирование стопа" : "Постановка в стоп-лист"}
+        </p>
 
-            <FormSelect
-              {...register("reason")}
-              options={REASON_OPTIONS}
-              error={errors.reason?.message}
-              className="mt-2 h-11"
-              errorClassName="mt-1"
-            />
-          </label>
+        <h2 id="stop-dialog-title" className="mt-2 text-2xl font-semibold">
+          {item.title}
+        </h2>
+        <p className="mt-3 text-sm text-neutral-500">
+          Укажите причину и срок. Позицию можно будет вернуть в продажу.
+        </p>
+      </header>
 
-          <fieldset>
-            <legend className="text-sm font-medium">Срок стопа</legend>
-
-            <div className="mt-3 space-y-3">
-              {UNTIL_MODE_OPTIONS.map(({ value, label }) => (
-                <label
-                  key={value}
-                  className="flex cursor-pointer items-center gap-3"
-                >
-                  <input
-                    type="radio"
-                    {...register("untilMode")}
-                    value={value}
-                    checked={untilMode === value}
-                    onChange={() => {
-                      handleUntilModeChange(value);
-                    }}
-                  />
-
-                  <span className="text-sm">{label}</span>
-                </label>
-              ))}
-            </div>
-
-            {untilMode === "time" ? (
-              <div className="mt-3">
-                <FormSelect
-                  {...register("until", {
-                    setValueAs: (value: string | null) => value || null,
-                  })}
-                  value={until ?? ""}
-                  options={timeOptions}
-                  error={errors.until?.message}
-                  className="h-10 text-sm"
-                  errorClassName="mt-2"
-                  onFocus={() => {
-                    setTimeOptions(getStopTimeOptions());
-                  }}
-                  onChange={(event) => {
-                    const value = event.target.value;
-
-                    setValue("until", value || null, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                  }}
-                >
-                  <option value="" disabled>
-                    Выберите время
-                  </option>
-
-                  {until && !hasOption(timeOptions, until) ? (
-                    <option value={until}>
-                      {formatDateTime(until)} (выбрано)
-                    </option>
-                  ) : null}
-                </FormSelect>
-              </div>
-            ) : null}
-          </fieldset>
-        </form>
-
-        <footer className="flex justify-end gap-3 border-t border-neutral-200 p-6">
-          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Отмена
-          </Button>
-
-          <Button
-            type="submit"
-            form="stop-item-form"
-            disabled={Object.keys(errors).length > 0}
-            loading={isSubmitting}
+      <form
+        id="stop-item-form"
+        className="flex flex-1 flex-col space-y-6 p-6"
+        onSubmit={handleSubmit(submitForm)}
+      >
+        {errorMessage && (
+          <p
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
           >
-            {isSubmitting
-              ? "Сохраняется..."
-              : item.status.kind === "stopped"
-                ? "Сохранить"
-                : "Поставить в стоп"}
-          </Button>
-        </footer>
-      </aside>
-    </>
+            {errorMessage}
+          </p>
+        )}
+        <label className="block">
+          <span className="text-sm font-medium">Причина</span>
+
+          <FormSelect
+            {...register("reason")}
+            options={REASON_OPTIONS}
+            error={errors.reason?.message}
+            className="mt-2 h-11"
+            errorClassName="mt-1"
+          />
+        </label>
+
+        <fieldset>
+          <legend className="text-sm font-medium">Срок стопа</legend>
+
+          <div className="mt-3 space-y-3">
+            {UNTIL_MODE_OPTIONS.map(({ value, label }) => (
+              <label
+                key={value}
+                className="flex cursor-pointer items-center gap-3"
+              >
+                <input
+                  type="radio"
+                  {...register("untilMode")}
+                  value={value}
+                  checked={untilMode === value}
+                  onChange={() => {
+                    handleUntilModeChange(value);
+                  }}
+                />
+
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+
+          {untilMode === "time" ? (
+            <div className="mt-3">
+              <FormSelect
+                {...register("until", {
+                  setValueAs: (value: string | null) => value || null,
+                })}
+                value={until ?? ""}
+                options={timeOptions}
+                aria-label="Время окончания стопа"
+                error={errors.until?.message}
+                className="h-10 text-sm"
+                errorClassName="mt-2"
+                onFocus={() => {
+                  setTimeOptions(getStopTimeOptions());
+                }}
+                onChange={(event) => {
+                  const value = event.target.value;
+
+                  setValue("until", value || null, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  });
+                }}
+              >
+                <option value="" disabled>
+                  Выберите время
+                </option>
+
+                {until && !hasOption(timeOptions, until) ? (
+                  <option value={until}>
+                    {formatDateTime(until)} (выбрано)
+                  </option>
+                ) : null}
+              </FormSelect>
+            </div>
+          ) : null}
+        </fieldset>
+      </form>
+
+      <footer className="flex justify-end gap-3 border-t border-neutral-200 p-6">
+        <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+          Отмена
+        </Button>
+
+        <Button
+          type="submit"
+          form="stop-item-form"
+          disabled={Object.keys(errors).length > 0}
+          loading={isSubmitting}
+        >
+          {isSubmitting
+            ? "Сохраняется..."
+            : item.status.kind === "stopped"
+              ? "Сохранить"
+              : "Поставить в стоп"}
+        </Button>
+      </footer>
+    </dialog>
   );
 }
 

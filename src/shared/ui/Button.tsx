@@ -7,10 +7,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS_STYLES = {
-  primary: "bg-[#C6462F] text-white hover:bg-[#B63D29]",
-  secondary:
-    "border border-neutral-300 bg-white text-[#171512] hover:bg-neutral-50",
-  ghost: "text-[#171512] hover:bg-neutral-100",
+  primary: "button-primary",
+  secondary: "button-secondary",
+  ghost: "button-ghost",
 };
 
 export function Button({
@@ -22,8 +21,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const finalClassName = [
-    `inline-flex h-9 items-center justify-center rounded-lg px-3 text-sm 
-    font-medium transition disabled:cursor-not-allowed disabled:opacity-50`,
+    "app-button",
     VARIANTS_STYLES[variant],
     className,
   ].join(" ");

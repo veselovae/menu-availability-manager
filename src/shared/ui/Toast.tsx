@@ -21,7 +21,7 @@ export function Toast({ message, variant = "error", onClose }: ToastProps) {
   return (
     <div
       role="status"
-      className={`fixed bottom-6 right-6 z-50 w-[360px] rounded-xl border bg-white 
+      className={`fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] rounded-xl border bg-white 
         p-4 shadow-lg ${variant === "success" ? "border-green-200" : "border-red-200"}`}
     >
       <p className="font-medium text-[#171512]">

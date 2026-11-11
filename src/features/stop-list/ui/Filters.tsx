@@ -1,5 +1,5 @@
 // Показывает фильтры и обновляет URL при выборе цеха или статуса.
-﻿"use client";
+"use client";
 
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ export function Filters({ filters }: FiltersProps) {
   };
 
   return (
-    <div className="flex gap-9">
+    <div className="menu-filters">
       <FilterGroup
         name="shop"
         label="Цех:"
@@ -69,12 +69,8 @@ function FilterGroup<T extends string>({
   const labelId = `${name}-filter-label`;
 
   return (
-    <div
-      role="group"
-      aria-labelledby={labelId}
-      className="flex flex-wrap items-center gap-2"
-    >
-      <span id={labelId} className="text-sm font-medium text-neutral-700 mr-3">
+    <div role="group" aria-labelledby={labelId} className="filter-group">
+      <span id={labelId} className="filter-label">
         {label}
       </span>
       {options.map((option) => (
@@ -119,17 +115,7 @@ const FilterChip = ({
         // И менять span в зависимости от состояния input'а.
         className="peer sr-only"
       />
-      <span
-        className={`inline-flex items-center rounded-full px-4 py-1 
-            border border-neutral-300 bg-white text-sm text-neutral-700
-            transition-colors duration-100 hover:bg-neutral-50
-            peer-checked:hover:bg-[#C6462F] peer-checked:border-[#C6462F] 
-            peer-checked:bg-[#C6462F] peer-checked:text-white 
-            peer-focus-visible:outline-2
-        `}
-      >
-        {children}
-      </span>
+      <span className="filter-chip">{children}</span>
     </label>
   );
 };

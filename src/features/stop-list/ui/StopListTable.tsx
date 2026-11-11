@@ -6,6 +6,7 @@ import {
 import { formatDateTime } from "@/shared/lib/date";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
+import { Icon } from "@/shared/ui/Icon";
 import { MenuItemStatusKind, type MenuItem } from "@/types/menu";
 
 interface StopListTableProps {
@@ -26,8 +27,11 @@ export function StopListTable({
   onResume,
 }: StopListTableProps) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
-      <table className="w-full min-w-[1040px] border-collapse text-left">
+    <div className="menu-table-wrap">
+      <table className="menu-table">
+        <caption className="sr-only">
+          Доступность блюд, остатки и действия
+        </caption>
         <thead>
           <tr className="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
             <TableHeader>Название</TableHeader>
@@ -45,25 +49,41 @@ export function StopListTable({
             const isStopped = item.status.kind === MenuItemStatusKind.Stopped;
             const isPending = pendingItemId === item.id;
 
-            const rowClassName = [
-              "border-b border-neutral-100 last:border-b-0",
-              "hover:bg-neutral-50 transition-colors duration-100",
-              isStopped ? "text-neutral-500" : "",
-            ].join(" ");
+            const rowClassName = [isStopped ? "row-stopped" : ""].join(" ");
 
             return (
               <tr key={item.id} className={rowClassName}>
-                <TableCell className="font-medium w-[18%]">
-                  {item.title}
+                <TableCell className="dish-cell">
+                  <div className="dish-info">
+                    <span className={`dish-icon dish-${item.shop}`}>
+                      <Icon
+                        name={
+                          item.shop === "bar"
+                            ? "cup"
+                            : item.shop === "pastry"
+                              ? "cake"
+                              : "plate"
+                        }
+                      />
+                    </span>
+                    <span>{item.title}</span>
+                  </div>
                 </TableCell>
 
-                <TableCell className="text-sm">
+                <TableCell label="Цех" className="shop-cell">
                   {SHOP_LABELS[item.shop]}
                 </TableCell>
 
-                <TableCell className="text-sm">{item.stock}</TableCell>
+                <TableCell label="Остаток">
+                  <span
+                    className={`stock-value ${item.stock <= 5 ? "stock-low" : ""}`}
+                  >
+                    {item.stock}
+                    <span> шт.</span>
+                  </span>
+                </TableCell>
 
-                <TableCell>
+                <TableCell label="Статус" className="status-cell">
                   {isStopped ? (
                     <Badge variant="danger">В стоп-листе</Badge>
                   ) : (
@@ -83,20 +103,20 @@ export function StopListTable({
                   )}
                 </TableCell>
 
-                <TableCell className="text-sm w-[15%]">
+                <TableCell label="Причина" className="reason-cell">
                   {item.status.kind === MenuItemStatusKind.Stopped
                     ? STOP_REASON_LABELS[item.status.reason]
                     : "-"}
                 </TableCell>
 
-                <TableCell className="text-sm">
+                <TableCell label="Срок стопа" className="until-cell">
                   {item.status.kind === MenuItemStatusKind.Stopped
                     ? formatUntil(item.status.until)
                     : "-"}
                 </TableCell>
 
-                <TableCell>
-                  <div className="flex justify-end gap-2">
+                <TableCell className="actions-cell">
+                  <div className="row-actions">
                     {isStopped ? (
                       <>
                         <Button
@@ -116,9 +136,14 @@ export function StopListTable({
                           <Button
                             variant="secondary"
                             disabled={item.stock === 0 || isPending}
+                            aria-label={
+                              item.stock === 0
+                                ? "Возврат недоступен: остаток 0"
+                                : `Вернуть в продажу: ${item.title}`
+                            }
                             onClick={() => onResume(item.id)}
                           >
-                            Вернуть в продажу
+                            Вернуть <Icon name="arrow" size={14} />
                           </Button>
                         </span>
                       </>
@@ -127,8 +152,9 @@ export function StopListTable({
                         variant="secondary"
                         onClick={() => onOpenStopPanel(item.id)}
                         disabled={isPending}
+                        aria-label={`В стоп-лист: ${item.title}`}
                       >
-                        В стоп-лист
+                        <Icon name="pause" size={14} /> В стоп-лист
                       </Button>
                     )}
                   </div>
@@ -154,7 +180,7 @@ interface TableHeaderProps {
 }
 
 const TableHeader = ({ children, align = "left" }: TableHeaderProps) => (
-  <th className={`px-4 py-3 ${align === "right" ? "text-right" : ""}`}>
+  <th scope="col" className={align === "right" ? "text-right" : ""}>
     {children}
   </th>
 );
@@ -162,8 +188,11 @@ const TableHeader = ({ children, align = "left" }: TableHeaderProps) => (
 interface TableCellProps {
   children: React.ReactNode;
   className?: string;
+  label?: string;
 }
 
-const TableCell = ({ children, className = "" }: TableCellProps) => (
-  <td className={`px-4 py-4 ${className}`}>{children}</td>
+const TableCell = ({ children, className = "", label }: TableCellProps) => (
+  <td data-label={label} className={className}>
+    {children}
+  </td>
 );
